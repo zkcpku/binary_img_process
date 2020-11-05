@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+	<title>binary_img</title>
+</head>
+<body>
+<p><canvas id="cvs"></canvas></p>
+<p><input type="file" id="input_img"></p>
+
+<p><input type="checkbox" name="is_gray" value="is_gray" checked="checked"> 灰度图</p>
+
+<p><input id="push" type="range" max=0 min=255> 调整比例</p>
+
+
+
+
+<script type="text/javascript">
+	
+
+function readFile(){
+    var file = this.files[0];//获取input输入的图片
+    if(!/image\/\w+/.test(file.type)){
+        alert("请确保文件为图像类型");
+        return false;
+    }//判断是否图片，在移动端由于浏览器对调用file类型处理不同，虽然加了accept = 'image/*'，但是还要再次判断
+    var reader = new FileReader();
+    reader.readAsDataURL(file);//转化成base64数据类型
+    reader.onload = function(e){
+            drawToCanvas(this.result);
+        }
+    }
+
+function drawToCanvas(imgData,target_id = "#cvs"){
+    var cvs = document.querySelector(target_id);
+        
+        var img = new Image;
+            img.src = imgData;
+        // var tempMat = new Mat(height, width, imageData.data);
+            img.onload = function(){//必须onload之后再画
+            	// console.log(img.width);
+            	cvs.width=img.width;
+        		cvs.height=img.height;
+        		var ctx = cvs.getContext('2d');
+                ctx.drawImage(img,0,0);
+                console.log(img.data);
+                strDataURI = cvs.toDataURL();//获取canvas base64数据
+            }
+}
+
+$('#input_img').change(readFile);
+
+
+// $("#push").on("change",function(){
+// 					// console.log(d);
+// 					d = $("#push").val();
+// 					// console.log(Math.ceil(d / 10) * 10);
+// 					d = Math.ceil(d / 10) * 10;
+// 					factor = d - 50;
+// 					factor = factor / 5;
+// 					factor = Math.pow(2,factor);
+// 					// console.log(d % 10 * 10);
+// 					$("#push").val(d);
+// 					$("#push_text").text(factor);
+// 					F_ks.Fe_k = F_ks_origin.Fe_k * factor;
+// 					// console.log(F_ks);
+// 					train();
+// 				})
+
+</script>
+
+</body>
+</html>

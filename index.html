@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>toGray</title>
+    
+    <!--两张图片格式为左浮动，处在一行-->
+    <style type="text/css">
+        .InputOutput{
+            float: left;
+            margin: 10px;
+        }
+    </style>
+    <script src="js/jquery.js" type="text/javascript"></script>
+</head>
+<body>
+    <!--若 opencv.js 文件加载成功，则会显示“opencv.js is ready.”-->
+    <p id="status">opencv.js正在加载...</p>
+    <p id="docs_url">更多信息可查看：<a href="https://docs.opencv.org/3.3.1/d5/d10/tutorial_js_root.html">OpenCV.js Tutorials</a></p>
+    
+    <!--图片读入区域-->
+    <div class="InputOutput">
+        <div class="caption">srcImg<input type="file" id="inputFile" name="file"/></div>
+        <img id="srcImg" alt="No Image"/>
+    </div>
+    
+    <!--结果展示区域-->
+    <div class="InputOutput">
+        <div class="caption">灰度图</div>
+        <canvas id="grayImg"></canvas>
+        <div>
+            <input type="checkbox" name="trans_gray" id="trans_gray" value="trans_gray"> 反色
+            <input type="checkbox" name="canny_edge" id="canny_edge" value="canny_edge"> Canny边缘检测
+            <input type="checkbox" name="Sobel_edge" id="Sobel_edge" value="Sobel_edge"> Sobel边缘检测
+            <input type="checkbox" name="Laplacian_edge" id="Laplacian_edge" value="Laplacian_edge"> Laplacian边缘检测
+        </div>
+
+        <!-- <div><span id="threshold_text">请设置阈值</span><input id="set_threshold" type="range" max=255 min=0 value=0 oninput="change_threshold()" style="width: 100%;"> 控制阈值</div> -->
+        <div class="caption">目标图</div>
+        <canvas id="dstImg"></canvas>
+        <div><span id="threshold_text">请设置阈值</span><input id="set_threshold" type="range" max=255 min=0 value=0 oninput="change_threshold()" style="width: 100%;"> 控制阈值</div>
+    </div>
+    
+    <!--将图片转换为灰度图，并在 canvas 中显示-->
+    <script type="text/javascript">
+
+
+
+
+
+        <!--成功加载 opencv.js 后，status 标签会显示“opencv.js is ready.”-->
+        function onOpenCvReady(){
+            document.getElementById("status").innerHTML="opencv.js 加载成功.";
+        }
+
+        <!--读入图片-->
+
+        let imgElement=document.getElementById("srcImg");
+        let fileElement=document.getElementById("inputFile");
+        fileElement.addEventListener("change",
+                (e) => {imgElement.src = URL.createObjectURL(e.target.files[0]);},
+                false);
+        
+        <!--转换为灰度图-->
+
+        function change_gray_img(){
+            // console.log($("#trans_gray").prop("checked"));
+            let src=cv.imread(imgElement);
+            let gray = new cv.Mat();
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+            if ($("#canny_edge").prop("checked")) {
+                cv.Canny(gray, gray, 50, 100, 3, false);
+                // cv.findContours(gray, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+            }
+            
+            if ($("#Sobel_edge").prop("checked")) {
+                cv.Sobel(gray, gray, cv.CV_8U, 0, 1, 3, 1, 0, cv.BORDER_DEFAULT);
+                // cv.findContours(gray, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+            }
+
+            if ($("#Laplacian_edge").prop("checked")) {
+                cv.Laplacian(gray, gray, cv.CV_8U, 1, 1, 0, cv.BORDER_DEFAULT);
+                // cv.findContours(gray, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+            }
+
+
+            if ($("#trans_gray").prop("checked")) {
+                for (var i = 0; i < gray.data.length; i++) {
+                    gray.data[i] = 255 - gray.data[i];
+                }
+            }
+
+
+
+
+            cv.imshow('grayImg', gray);
+            // console.log(gray);
+            src.delete();
+        }
+
+        imgElement.onload=function(){
+            {
+                // let src=cv.imread(imgElement);
+                // let gray = new cv.Mat();
+                // cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+                // if ($("#trans_gray").prop("checked")) {
+                //     for (var i = 0; i < gray.data.length; i++) {
+                //         gray.data[i] = 255 - gray.data[i];
+                //     }
+                // }
+
+                // cv.imshow('grayImg', gray);
+
+                // // console.log(gray);
+                // src.delete();
+                change_gray_img();
+            }
+
+
+            {
+                let src=cv.imread(imgElement);
+                let gray = new cv.Mat();
+                cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+                cv.imshow('dstImg', gray);
+
+                // console.log(gray.data);
+                // console.log(gray.data.length);
+
+
+
+                src.delete();
+            }
+
+        };
+        function change_threshold() {
+                    // console.log(d);
+                    d = $("#set_threshold").val();
+                    d = d / 1.0
+                    // factor = d - 50;
+                    // factor = factor / 5;
+                    // factor = Math.pow(2,factor);
+                    // console.log(d % 10 * 10);
+                    $("#set_threshold").val(d);
+                    $("#threshold_text").text(d);
+
+                    let src = cv.imread('grayImg');
+                    let dst = new cv.Mat();
+                    // cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+                    // You can try more different parameters
+
+                    cv.threshold(src, dst, d, 255, cv.THRESH_BINARY);
+                    // cv.adaptiveThreshold(src, dst, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 3, 2);
+                    cv.imshow('dstImg', dst);
+                    src.delete();
+                    dst.delete();
+                }
+
+        $("#set_threshold").on("change",change_threshold);
+
+
+
+        $("#trans_gray").click(change_gray_img);
+
+        $("#canny_edge").click(change_gray_img);
+
+        $("#Sobel_edge").click(change_gray_img);
+        $("#Laplacian_edge").click(change_gray_img);
+
+
+
+
+        
+
+    </script>
+    <script async src="js/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+</body>
+</html>
